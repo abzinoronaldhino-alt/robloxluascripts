@@ -1,0 +1,62 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+local minScale = 0.5
+local maxScale = 3
+local scaleStep = 0.02
+
+-- Track if player is walking (moving horizontally)
+local isWalking = false
+
+-- Function to safely change character scale
+local function changeScale(amount)
+    local currentScale = humanoid.BodyDepthScale.Value -- Using BodyDepthScale as example
+    local newScale = math.clamp(currentScale + amount, minScale, maxScale)
+    humanoid.BodyHeightScale.Value = newScale
+    humanoid.BodyDepthScale.Value = newScale
+    humanoid.BodyWidthScale.Value = newScale
+end
+
+-- Setup BodyScale values if they don’t exist (for R15 rigs)
+local function setupBodyScales()
+    for _, scaleName in pairs({"BodyHeightScale", "BodyDepthScale", "BodyWidthScale"}) do
+        if not humanoid:FindFirstChild(scaleName) then
+            local scale = Instance.new("NumberValue")
+            scale.Name = scaleName
+            scale.Value = 1
+            scale.Parent = humanoid
+        end
+    end
+end
+
+setupBodyScales()
+
+-- Detect walking by checking velocity on each frame
+game:GetService("RunService").RenderStepped:Connect(function()
+    if humanoid.Health <= 0 then return end
+
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+
+    local horizontalVelocity = Vector3.new(rootPart.Velocity.X, 0, rootPart.Velocity.Z).Magnitude
+
+    if horizontalVelocity > 1 then
+        -- Walking: grow bigger
+        changeScale(scaleStep)
+    else
+        -- Not walking: do nothing or slowly reset size if you want
+    end
+end)
+
+-- Detect jump using Humanoid's Jumping event
+humanoid.Jumping:Connect(function(active)
+    if active then
+        -- Jumping: shrink smaller
+        changeScale(-scaleStep * 5) -- Shrink faster on jump
+    end
+end)
+
