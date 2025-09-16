@@ -1,0 +1,39 @@
+local RunService = game:GetService("RunService")
+local Workspace = game.Workspace
+
+local spawnInterval = 0.2 -- seconds between blocks spawning
+local blockSize = Vector3.new(4, 4, 4) -- size of each block
+local spawnHeight = 100 -- height from which blocks fall
+local fallSpeed = 50 -- studs per second
+
+local spawnAreaSize = Vector3.new(100, 0, 100) -- X,Z area where blocks spawn
+
+-- Function to create and drop a block
+local function spawnBlock()
+    local block = Instance.new("Part")
+    block.Size = blockSize
+    block.Position = Vector3.new(
+        math.random(-spawnAreaSize.X/2, spawnAreaSize.X/2),
+        spawnHeight,
+        math.random(-spawnAreaSize.Z/2, spawnAreaSize.Z/2)
+    )
+    block.Anchored = false
+    block.BrickColor = BrickColor.Random()
+    block.Parent = Workspace
+
+    -- Add BodyVelocity to control fall speed
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.Velocity = Vector3.new(0, -fallSpeed, 0)
+    bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0)
+    bodyVelocity.Parent = block
+
+    -- Optional: Remove block after 10 seconds to clean up
+    game:GetService("Debris"):AddItem(block, 10)
+end
+
+-- Loop to spawn blocks repeatedly
+while true do
+    spawnBlock()
+    wait(spawnInterval)
+end
+
