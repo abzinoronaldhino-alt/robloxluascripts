@@ -1,0 +1,55 @@
+local Workspace = game.Workspace
+local Debris = game:GetService("Debris")
+
+local baseplate = Workspace:FindFirstChild("Baseplate")
+if not baseplate then
+    warn("Baseplate not found!")
+    return
+end
+
+local meteorSize = Vector3.new(20, 20, 20)
+local spawnHeight = 200
+local fallSpeed = 100 -- studs per second
+
+-- Function to create a meteor
+local function createMeteor(position)
+    local meteor = Instance.new("Part")
+    meteor.Shape = Enum.PartType.Ball
+    meteor.Size = meteorSize
+    meteor.Position = position
+    meteor.BrickColor = BrickColor.new("Really black")
+    meteor.Material = Enum.Material.Neon
+    meteor.Anchored = false
+    meteor.CanCollide = true
+    meteor.Name = "Meteor"
+    meteor.Parent = Workspace
+
+    -- Add BodyVelocity for falling
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.Velocity = Vector3.new(0, -fallSpeed, 0)
+    bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0)
+    bodyVelocity.Parent = meteor
+
+    -- Detect collision with baseplate
+    local connection
+    connection = meteor.Touched:Connect(function(hit)
+        if hit == baseplate then
+            -- Create huge explosion
+            local explosion = Instance.new("Explosion")
+            explosion.Position = meteor.Position
+            explosion.BlastRadius = 50
+            explosion.BlastPressure = 500000
+            explosion.DestroyJointRadiusPercent = 0.8
+            explosion.Parent = Workspace
+
+            -- Cleanup meteor and disconnect event
+            connection:Disconnect()
+            meteor:Destroy()
+        end
+    end)
+end
+
+-- Spawn two meteors at different X positions
+createMeteor(Vector3.new(-50, spawnHeight, 0))
+createMeteor(Vector3.new(50, spawnHeight, 0))
+
